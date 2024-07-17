@@ -16,12 +16,22 @@ export default function Login() {
     setShowPassword(!showPassword);
   };
 
+  const setCookie = (name, value, days) => {
+    let expires = "";
+    if (days) {
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/; Secure; SameSite=Lax";
+  };
+
   const login = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api-auth/login/', {
+      const response = await fetch('http://127.0.0.1:8000/auth/token/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,8 +44,11 @@ export default function Login() {
       }
 
       const data = await response.json();
-      console.log(data)
-      localStorage.setItem('token', data.access);
+
+      // Salvar os tokens nos cookies
+      setCookie('access_token', data.access, 1);
+      setCookie('refresh_token', data.refresh, 7);
+
       router.push('/profile');
 
     } catch (error) {
